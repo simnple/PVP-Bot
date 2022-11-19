@@ -1,0 +1,78 @@
+command /Bot [<offline player>] [<text>] [<number>]:
+    permission: PVPBot.Bot
+    trigger:
+        if arg-1 is set:
+            set {_name} to "%arg-1%"
+
+        else:
+            set {_name} to player's displayname
+
+        make console execute command "/npc sel %{Bot.ID}%"
+        make console execute command "/npc remove"
+        delete {Bot}
+        delete {Bot.Owner}
+        delete {Bot.ID}
+        delete {Bot.Hit}
+        delete {Bot.Reach}
+
+        create a citizen named {_name} at player's location
+
+        set {Bot} to true
+        set {Bot.Owner} to player
+        set {Bot.ID} to last created citizen id
+
+        if arg-2 is "Hit":
+            set {Bot.Hit} to true
+        
+        else:
+            set {Bot.Hit} to false
+
+        if arg-3 is not set:
+            set {Bot.Reach} to 3
+
+        else:
+            set {Bot.Reach} to arg-3
+
+        set the player's food level to 10
+
+        change citizen {Bot.ID} skin to {_name}
+
+        make console execute command "/npc sel %{Bot.ID}%"
+        make console execute command "/npc vulnerable"
+
+        send "&aBot을 성공적으로 생성되었습니다." to player
+        send "&a3초 무적 후 때리실 수 있습니다." to player
+
+command /removeBot:
+    permission: PVPBot.removeBot
+    trigger:
+        make console execute command "/npc sel %{Bot.ID}%"
+        make console execute command "/npc remove"
+        delete {Bot}
+        delete {Bot.Owner}
+        delete {Bot.ID}
+        delete {Bot.Hit}
+        delete {Bot.Reach}
+
+        send "&cBot을 삭제하였습니다." to player
+
+every 0.25 seconds:
+    if {Bot} is true:
+        make citizen {Bot.ID} look at {Bot.Owner}
+        move citizen {Bot.ID} to {Bot.Owner} at speed 2
+        if {Bot.Hit} is true:
+            if distance between {Bot.Owner} and citizen {Bot.ID} is smaller than {Bot.Reach}:
+                make citizen {Bot.ID} attack {Bot.Owner}
+
+on tab complete of "/Bot":
+	set tab completions for position 2 to "Hit" and "NoHit"
+
+on hunger meter change:
+    cancel event
+
+on damage of player:
+    if attacker is npc:
+        set damage to 0
+    
+    if victim is npc:
+        set damage to 0
